@@ -1,42 +1,41 @@
 var fs = require('fs');
+var request = require('request');
 
-exports = module.exports = {};
+commands = module.exports = {
 
-exports.pwd = function(file) {
-  process.stdout.write(process.cwd());
-  process.stdout.write('\nprompt > ');
-};
+pwd: function(file, done) {
+  var output = process.cwd();
+  done(output);
+},
 
-exports.date = function(file) {
+date: function(file, done) {
   var date = new Date();
-  process.stdout.write(date.toString());
-  process.stdout.write('\nprompt > ');
-};
+  done(date.toString());
+},
 
-
-exports.ls = function(file) {
+ls: function(file, done) {
   fs.readdir('.', function(err, files) {
     if (err) throw err;
+    var listed = '';
     files.forEach(function(file) {
-      process.stdout.write(file.toString() + "\n");
+      listed += file.toString() + "\n";
     });
-    process.stdout.write('\nprompt > ');
+    done(listed);
   });
-};
+},
 
-exports.echo = function(file) {
-  process.stdout.write(file);
-};
+echo: function(file, done) {
+  done(file);
+},
 
-exports.cat = function(file) {
+cat: function(file, done) {
   fs.readFile(file, function(err, file) {
     if (err) throw err;
-    process.stdout.write(file);
-    process.stdout.write('prompt > ');
+    done(file);
   });
-};
+},
 
-exports.head = function(file, lines) {
+head: function(file, lines) {
   fs.readFile(file, function(err, file) {
     if (err) throw err;
     var cabeza = file.toString().split('\n').slice(0,lines).join('\n');
@@ -44,9 +43,9 @@ exports.head = function(file, lines) {
     process.stdout.write('prompt > ');
   });
 
-};
+},
 
-exports.tail = function(file, lines) {
+tail: function(file, lines) {
   fs.readFile(file, function(err, file) {
     if (err) throw err;
     var talon = file.toString().split('\n').slice(-lines).join('\n');
@@ -54,40 +53,49 @@ exports.tail = function(file, lines) {
     process.stdout.write('prompt > ');
   });
 
-};
+},
 
-exports.sort = function(file) {
+sort: function(file) {
   fs.readFile(file, function(err, file) {
     if (err) throw err;
-    var sorted = file.toString().split('\n').sort();
-    process.stdout.write(sorted.join('\n'));
+    var sorted = file.toString().split('\n').sort().join('\n');
+    process.stdout.write(sorted);
     return sorted;
   });
-};
+},
 
-exports.wc = function(file) {
+wc: function(file) {
   fs.readFile(file, function(err, file) {
     if (err) throw err;
     var lines = file.toString().split('\n').length.toString();
     process.stdout.write(lines);
   });
-};
+},
 
-exports.uniq = function(file) {
+uniq: function(file, sorted) {
 
-    // var sortedLines = exports.sort(file);
+    // var sortedLines = sort(file);
     // process.stdout.write(sortedLines.join(" "));
 
-    var sorted = exports.sort(file);
-
-    fs.readFile(file, function(err, sorted) {
+    fs.readFile(file, function(err, file) {
       if (err) throw err;
-      var lines = sorted.toString().split('\n');
-      process.stdout.write(lines.filter(function(line, i) {
-        return lines[i-1] !== line;
-      }).join('\n'));
+      var lines = file.toString().split('\n');
+      for (var i=1; i<lines.length; i++) {
+        if (lines[i-1] === lines[i]) {
+          lines.splice(i,1);
+          i--;
+        }
+      }
+      process.stdout.write(lines.join('\n'));
     });
-  };
+  },
 
+curl: function(file) {
+  request.get({ url: file }, function (err, res) {
+    process.stdout.write(res.body);
+  });
+}
+
+}
 
 // process.stdout.write('\nprompt > ');
